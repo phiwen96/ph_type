@@ -63,4 +63,33 @@ template <typename T>
 constexpr auto type = type_t <T> {};
 
 
+
+
+template <typename... T>
+auto type_watcher (T&&... t)
+{
+    return [...t = forward <T> (t)] <typename... U> ()
+    {
+        constexpr auto me = [] <typename A, typename... B> (auto&& me, auto&& fun) constexpr
+        {
+            if constexpr (requires {fun.template operator () <A> ();})
+            {
+                if (not fun.template operator () <A> ())
+                {
+                    if constexpr (sizeof... (B) > 0)
+                    {
+                        me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
+                    }
+                }
+            } else if constexpr (sizeof... (B) > 0)
+            {
+                me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
+            }
+        };
+        
+        (..., me.template operator () <U...> (move (me), t));
+    };
+}
+
+
 #endif
