@@ -1,42 +1,48 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
+#include <ph_concepts/concepts.hpp>
 using namespace std;
 
+template <typename T>
+concept bool_func =
 
 template <typename... T>
-    auto type_watcher (T&&... t)
+requires requires {
+
+}
+constexpr auto type_watcher (T&&... t) -> auto
+{
+    return [...t = forward <T> (t)] <typename... U> () constexpr -> auto
     {
-    return [...t = forward <T> (t)] <typename... U> ()
-    {
-    constexpr auto me = [] <typename A, typename... B> (auto&& me, auto&& fun) constexpr
-    {
-    if constexpr (requires {fun.template operator () <A> ();})
-    {
-    if (not fun.template operator () <A> ())
-    {
-    if constexpr (sizeof... (B) > 0)
-    {
-    me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
-    }
-    }
-    } else if constexpr (sizeof... (B) > 0)
-    {
-    me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
-    }
+        constexpr auto me = [] <typename A, typename... B> (auto&& me, auto&& fun) constexpr -> auto
+        {
+            if constexpr (requires {fun.template operator () <A> ();})
+            {
+                if constexpr (not fun.template operator () <A> ())
+                {
+                    if constexpr (sizeof... (B) > 0)
+                    {
+                        me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
+                    }
+                }
+            } else if constexpr (sizeof... (B) > 0)
+            {
+                me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
+            }
+        };
+        
+        (..., me.template operator () <U...> (move (me), t));
     };
-    
-    (..., me.template operator () <U...> (move (me), t));
-    };
-    }
+}
 
 template <typename T>
 struct type_t
 {
-//    template <typename Q>
-//    friend constexpr auto operator== (type_t const&, Q const&) -> bool
-//    {
-//        return is_same_v <T, Q>;
-//    }
+    //    template <typename Q>
+    //    friend constexpr auto operator== (type_t const&, Q const&) -> bool
+    //    {
+    //        return is_same_v <T, Q>;
+    //    }
 };
 
 template <typename T, typename U>
@@ -46,8 +52,8 @@ template <typename T, typename U>
 concept has_overloaded_same_type = requires (T const& t)
 {
     {t.template same_type <U> ()} -> __same <bool>;
-
-//    {U::template same_type <U> (declval <U const&> ())} -> __same <bool>;
+    
+    //    {U::template same_type <U> (declval <U const&> ())} -> __same <bool>;
 };
 
 
