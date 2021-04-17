@@ -1,6 +1,25 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
+#include <ph_concepts/concepts.hpp>
 using namespace std;
+
+
+
+
+template <typename F, typename... Args>
+struct is_function_type
+{
+    inline static constexpr bool value = false;
+};
+
+
+
+template <typename F, typename... Args>
+struct is_function_type <F (Args...)>
+{
+    inline static constexpr bool value = true;
+    inline static constexpr bool nr_of_args = sizeof... (Args);
+};
 
 
 

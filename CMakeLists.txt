@@ -22,9 +22,9 @@ add_subdirectory (cmake/phake)
 # if (NOT TARGET ph_time)
 # 	add_subdirectory (dependencies/ph_time)
 # endif ()
-# if (NOT TARGET ph_memory)
-# 	add_subdirectory (dependencies/ph_memory)
-# endif ()
+if (NOT TARGET ph_concepts)
+	add_subdirectory (dependencies/ph_concepts)
+endif ()
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	
