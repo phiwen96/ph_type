@@ -17,8 +17,8 @@ ph_precompile (TARGET ${self} PUBLIC PCH ${std_pch})
 
 add_library (ph::type ALIAS ${self})
 # target_link_libraries (${self} PRIVATE ph::time ph::macros ph::type_list ${Boost_LIBRARIES})
-# target_include_directories (${self} PUBLIC ${PROJECT_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS})
-target_link_libraries (${self} PRIVATE ph::concepts)
+target_include_directories (${self} PUBLIC ${PROJECT_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS})
+target_link_libraries (${self} PUBLIC ph::concepts ${Boost_LIBRARIES})
 
 target_include_directories (${self} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 # target_include_directories (${self} PUBLIC ph::coroutines)
