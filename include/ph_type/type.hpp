@@ -44,7 +44,8 @@ constexpr auto value_type = value_type_s {};
 template <typename T>
 struct type_t
 {
-
+    
+    using type = T;
 };
 template <typename T>
 constexpr type_t <T> type;
@@ -58,6 +59,12 @@ struct _types {};
 template <typename T>
 struct _types <type_t <T>>
 {};
+
+template <typename T>
+struct _types <T>
+{
+    using type = T;
+};
 
 
 
@@ -109,19 +116,10 @@ concept is_type_transf = requires {
 
 
 template <typename Derived>
-requires requires {
-    true;
-    /**
-     Derived.transform()
-     
-     because then we can ch
-     */
-    
-}
 struct transformer
 {
     template <template <typename...> typename T, typename... U>
-    using type = typename Derived::template type <T, U...>::type;
+    using transform = typename Derived::template transform <T, U...>;
 };
 
 template <typename... T>
@@ -130,7 +128,11 @@ struct transformations;
 template <typename Derived, typename... T>
 struct transformations <_types <T...>, transformer <Derived>>
 {
+    using type = typename transformer <Derived>::template transform <_types, T...>;
     
+    operator auto () {
+        return type {};
+    }
 };
 
 
@@ -175,17 +177,18 @@ struct has_s
 
 
 
-template <typename... T>
+template <bool yes = true>
 struct common_s
 {
-//    using type = common_type_t <T...>;
+    template <template <typename...> typename T, typename... U>
+    using transform = typename T <common_type_t <U...>>::type;
 };
 
 template <>
-struct common_s <>
+struct common_s <false>
 {
     template <template <typename...> typename T, typename... U>
-    using type = T <common_type_t <U...>>;
+    using transform = typename T <common_type_t <U...>>::type;
 };
 
 
@@ -201,25 +204,25 @@ constexpr transformer <common_s <>> common;
 //}
 
 
-template <typename U>
-constexpr auto operator > (common_s <> const& n, U&& rhs) -> auto
-{
-    return ;
-}
+//template <typename U>
+//constexpr auto operator > (common_s <> const& n, U&& rhs) -> auto
+//{
+//    return ;
+//}
 
-template <typename T>
-constexpr auto operator < (type_t <T> const&, common_s <> const&) -> auto
-{
-    return common_s <T> {};
-}
+//template <typename T>
+//constexpr auto operator < (type_t <T> const&, common_s <> const&) -> auto
+//{
+//    return common_s <T> {};
+//}
 
 //static_assert (is_same_v <decltype (types <int, char> | common), common_s <int, char>>, "");
 
-template <typename... T, typename U>
-constexpr auto operator > (common_s <T...> const& n, U&& rhs) -> auto
-{
-    return common_s <T..., decay_t <U>> {};
-}
+//template <typename... T, typename U>
+//constexpr auto operator > (common_s <T...> const& n, U&& rhs) -> auto
+//{
+//    return common_s <T..., decay_t <U>> {};
+//}
 
 
 
@@ -237,7 +240,7 @@ constexpr auto operator > (common_s <T...> const& n, U&& rhs) -> auto
 template <typename T, typename Derived1>
 constexpr auto operator | (type_t <type_t <T>> const&, transformer <Derived1> const& t) -> auto
 {
-    return type <T> | t;
+    return type_t <T> {} | t;
 }
 
 
@@ -245,7 +248,7 @@ constexpr auto operator | (type_t <type_t <T>> const&, transformer <Derived1> co
 template <typename T, typename Derived1>
 constexpr auto operator | (type_t <T> const&, transformer <Derived1> const& t) -> auto
 {
-    return types_t <T> | t;
+    return _types <T> {} | t;
 }
 
 template <typename... T, typename Derived1>
@@ -255,10 +258,12 @@ constexpr auto operator | (_types <T...> const&, transformer <Derived1> const& t
 }
 
 
+
+
 template <typename T, typename Derived1>
 constexpr auto operator | (T&&, transformer <Derived1> const&) -> auto
 {
-    return transformations <transformer <Derived1>, decay_t <T>> {};
+    return transformations <decay_t <T>, transformer <Derived1>> {};
 }
 
 static_assert (is_same_v <transformations <_types <int, char, double>, transformer <common_s <>>>, decltype (types_t <int, char, double> | common)>, "");
