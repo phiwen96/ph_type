@@ -1,7 +1,7 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
 #include <ph_concepts/concepts.hpp>
-#include <boost/hof.hpp>
+//#include <boost/hof.hpp>
 using namespace std;
 
 template <typename T>
@@ -142,11 +142,11 @@ struct transformations <_types <T...>, transformer <Derived>>
 
 
 
-template <ph::concepts::value_type T>
-auto operator | (type_t <T> const&, value_type_s const&) -> auto
-{
-    return typename T::value_type {};
-}
+//template <ph::concepts::value_type T>
+//auto operator | (type_t <T> const&, value_type_s const&) -> auto
+//{
+//    return typename T::value_type {};
+//}
 
 template <typename T, typename U>
 constexpr auto operator!= (type_t <T> const& t, U const& u) -> bool

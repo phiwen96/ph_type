@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <ph_type/type.hpp>
 
-using namespace boost::hof;
+//using namespace boost::hof;
 
 using namespace std;
 
@@ -13,19 +13,6 @@ struct same_f
         return a == b;
     }
 };
-
-constexpr infix_adaptor <same_f> same = {};
-
-
-
-
-BOOST_HOF_STATIC_LAMBDA_FUNCTION (bajs) = infix ([] (auto x, auto y)
-{
-    return x + y;
-});
-BOOST_HOF_STATIC_LAMBDA_FUNCTION (störst) = infix (BOOST_HOF_LIFT (std::max));
-BOOST_HOF_STATIC_LAMBDA_FUNCTION (minst) = infix (BOOST_HOF_LIFT (std::min));
-
 
 auto inc = [] (auto a)
 {
@@ -62,14 +49,17 @@ struct BASE
 
 
 template <char c>
-struct EL {
-    friend ostream& operator << (ostream& os, EL const& aa)
+struct __e {
+    friend ostream& operator << (ostream& os, __e const& aa)
     {
         os << c;
         return os;
     }
 };
 
+
+template <char c>
+constexpr auto _e = __e <c> {};
 
 
 template <char... c>
@@ -132,8 +122,8 @@ TEST_CASE ("")
     
 //    AA {} and BB {} and CC {} or DD {} and CC {};
     
-    cout << (EL <'0'> {} and EL <'1'> {} and EL <'2'> {} or EL <'3'> {} and EL <'4'> {} | EL <'5'> {} | EL <'6'> {}) << endl;
-    cout << (EL <'0'> {} or EL <'1'> {} | EL <'x'> {} and EL <'2'> {} or EL <'3'> {} and EL <'4'> {} | EL <'5'> {} | EL <'6'> {}) << endl;
+    cout << (_e <'0'> and _e <'1'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << endl;
+    cout << (_e <'0'> or _e <'1'> | _e <'x'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << endl;
 
 //    AA {} and BB {} | CC {};
     
@@ -154,19 +144,10 @@ TEST_CASE ("")
     
 //    int n2 = B{} <common> C{} | value_type;
     
-    constexpr auto sds = compose (inc, mult);
     
 //    cout << sds (3) << endl;
     
-    auto d = 4 <störst> 5;
-    auto d2 = 4 <minst> 5;
-//    cout << d2 << endl;
-//    cout << d << endl;
-    auto my_max = BOOST_HOF_LIFT (std::max);
-//    cout << my_max (1, 2) << endl;
-    
-    auto i = 5 <bajs> 4;
-    bool s = 5 <same> 5;
+
 //    cout << i << endl;
 }
 
