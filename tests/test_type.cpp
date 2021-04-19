@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 #include <ph_type/type.hpp>
+#include <ph_type/string_literal.hpp>
 
 //using namespace boost::hof;
 
@@ -142,18 +143,18 @@ struct HEM <A, B, C, D...> : std::true_type {
 };
 
 
-
-
+template <typename Derived>
+struct _AA {using type = Derived;};
+struct _BB : _AA <_BB> {};
 TEST_CASE ("")
 {
     
-    
-    auto a = types <type <int>>;
+//    auto a = types <type <int>>;
     transformer <common_s <>> tr = common;
     
 //    transformations <_types <A, B, C>, transformer <common_s <>>> _vv = types_t <A, B, C> | common;
     
-    auto vv = types_t <int, double, char> | common + common;
+    auto vv = types_t <int, double, char> | common;
     
     
 
@@ -163,15 +164,20 @@ TEST_CASE ("")
     HEM <A3, A4> h;
     
     transformations <_types <int, double, char>, transformer <common_s <>>> vv2 = types_t <int, double, char> | common;
-    std::string ss = types_t <int, double, char> | same | ;
+//    std::string ss = types_t <int, double, char> | same <as> ;
     
     
     
     std::cout << (_e <'0'> and _e <'1'> and _e <'2'> and _e <'3'> and _e <'4'> | _e <'5'> + _e <'6'> or _e <'7'>) << std::endl;
     std::cout << (_e <'0'> or _e <'1'> | _e <'x'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << std::endl;
 
-
-
+//    "ew"_y;
+    230_y;
+    std::cout << L"x = " << std::endl;
+    std::cout << L"y = " << std::endl;
+    3_;
+    "ds"_;
+    common;
 }
 
 

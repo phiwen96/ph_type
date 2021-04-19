@@ -1,104 +1,24 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
 #include <ph_concepts/concepts.hpp>
+#include "concepts.hpp"
+#include "logical_operators.hpp"
+#include "operands.hpp"
 //#include <boost/hof.hpp>
 //using namespace std;
 
-template <typename T>
-concept bool_func = requires (T t) {
-    {t ()} -> ph::concepts::convertible <bool>;
-};
-
-template <bool_func... T>
-
-constexpr auto type_watcher (T&&... t) -> auto
-{
-    return [...t = forward <T> (t)] <typename... U> () constexpr -> auto
-    {
-        constexpr auto me = [] <typename A, typename... B> (auto&& me, auto&& fun) constexpr -> auto
-        {
-            if constexpr (requires {fun.template operator () <A> ();})
-            {
-                if constexpr (not fun.template operator () <A> ())
-                {
-                    if constexpr (sizeof... (B) > 0)
-                    {
-                        me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
-                    }
-                }
-            } else if constexpr (sizeof... (B) > 0)
-            {
-                me.template operator () <B...> (move (me), forward <decltype (fun)> (fun));
-            }
-        };
-        
-        (..., me.template operator () <U...> (move (me), t));
-    };
-}
-
-
-template <typename Transformer, typename... Args>
-concept can_transform = requires {
-    typename Transformer::template transform <_types, Args...>;
-};
-
-
-template <typename... T>
-struct __as
-{
-    
-};
-
-template <>
-struct __as <>
-{
-    
-};
-
-constexpr __as as {};
-
-struct __if {};
-constexpr __if _if {};
-
-struct __then {};
-constexpr __then _then {};
-
-struct __else {};
-constexpr __else _else {};
-
-struct __while {};
-constexpr __while _while {};
-
-struct __and {};
-constexpr __and _and {};
-
-struct __or {};
-constexpr __or _or {};
-
-template <typename Parent, typename Child>
-struct __parent
-{
-    using me = __parent <Parent, Child>;
-    
-    template <typename Transformer>
-    using add_transformer = __parent <Parent, typename Child::template add_transformer <Transformer>>;
-
-    template <typename... Types>
-    using transform = typename Child::template transform <typename Parent::template transform <Types...>>;
-};
-
-struct __same
-{
-    template <typename ChildTransformer>
-    using add_transformer = __parent <__same, ChildTransformer>;
-    
-//    template <template <typename...> typename T, typename... U>
-//    using transform = std::conditional_t <(std::is_same_v <A, U> and ...), std::string, std::false_type>;
-};
 
 
 
-constexpr auto same = __same {};
+
+
+
+
+
+
+
+
+
 
 struct value_type_s {};
 constexpr auto value_type = value_type_s {};
@@ -197,11 +117,11 @@ struct transformer
 template <typename... T>
 struct transformations;
 
-template <typename Transformer, typename... T>
-requires (can_transform <Transformer, T...>)
-struct transformations <_types <T...>, Transformer>
+template <typename Transformer, template <typename...> typename TypesContainer, typename... Types>
+requires (can_transform_types <Transformer, TypesContainer, Types...>)
+struct transformations <TypesContainer <Types...>, Transformer>
 {
-    using type = typename Transformer::template transform <_types, T...>;
+    using type = typename Transformer::template transform <TypesContainer, Types...>;
     
     operator auto () {
         return type {};
@@ -349,11 +269,11 @@ constexpr auto operator | (_types <T...> const&, transformer <Derived1> const& t
     return transformations <_types <T...>, transformer <Derived1>> {};
 }
 
-template <typename... T, typename Transformer>
-requires (can_transform <Transformer, T...>)
-constexpr auto operator | (_types <T...> const&, Transformer const& t) -> auto
+template <typename Transformer, template <typename...> typename TypesContainer, typename... Types>
+requires (can_transform_types <Transformer, TypesContainer, Types...>)
+constexpr auto operator | (TypesContainer <Types...> const&, Transformer const& t) -> auto
 {
-    return transformations <_types <T...>, Transformer> {};
+    return transformations <TypesContainer <Types...>, Transformer> {};
 }
 
 template <typename T, typename Derived1, typename Derived2>
