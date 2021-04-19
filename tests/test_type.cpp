@@ -3,7 +3,7 @@
 
 //using namespace boost::hof;
 
-using namespace std;
+//using namespace std;
 
 
 struct same_f
@@ -38,7 +38,7 @@ struct D {};
 
 struct BASE
 {
-    friend ostream& operator << (ostream& os, BASE const&)
+    friend std::ostream& operator << (std::ostream& os, BASE const&)
     {
         return os;
     }
@@ -50,7 +50,7 @@ struct BASE
 
 template <char c>
 struct __e {
-    friend ostream& operator << (ostream& os, __e const& aa)
+    friend std::ostream& operator << (std::ostream& os, __e const& aa)
     {
         os << c;
         return os;
@@ -65,7 +65,7 @@ constexpr auto _e = __e <c> {};
 template <char... c>
 struct __operator
 {
-    friend ostream& operator << (ostream& os, __operator const& aa)
+    friend std::ostream& operator << (std::ostream& os, __operator const& aa)
     {
         ((os << c), ...);
         return os;
@@ -89,22 +89,58 @@ auto operator or (A <C...> a, B <D...> b)
     return __operator <'(', C..., ' ', 'o', 'r', ' ', D..., ')'> {};
 }
 
+template <template <char...> typename A, template <char...> typename B, char... C, char... D>
+auto operator + (A <C...> a, B <D...> b)
+{
+    return __operator <'(', C..., ' ', '+', ' ', D..., ')'> {};
+}
+
 struct A1 {};
 struct A2 {};
-struct A3 : A1 {};
+struct A3 {};
 struct A4 : A3 {};
+struct A5 : A3 {};
+struct A6 : A3 {};
+struct A7 : A3 {};
 
 template <typename...>
 struct HEM;
 
-template <typename A, typename B>
-struct HEM <A, B> : false_type {};
+template <typename A, typename B, typename... C>
+concept has_common = requires(A a, B b) {
+    true ? a : b;
+};
+
+template <typename A>
+struct HEM <A>
+{
+    using type = std::true_type;
+};
 
 template <typename A, typename B>
-requires requires {
-    true ? declval <A> () : declval <B> ();
-}
-struct HEM <A, B> : true_type {};
+requires (not has_common <A, B>)
+struct HEM <A, B> : std::false_type {
+
+};
+
+template <typename A, typename B>
+requires (has_common <A, B>)
+struct HEM <A, B> : std::true_type {
+
+};
+
+//template <typename A, typename B, typename... C>
+//struct HEM <A, B, C...> {
+//    using type = conditional_t <has_common <A, B>, typename HEM <decltype (true?declval<A>():declval<B>()), C...>::type, false_type>;
+//};
+
+template <typename A, typename B, typename C, typename... D>
+requires (has_common <A, B>)
+struct HEM <A, B, C, D...> : std::true_type {
+    using type = std::conditional_t <has_common <B, C>, typename HEM <C, D...>::type, std::false_type>;
+
+};
+
 
 
 
@@ -117,7 +153,7 @@ TEST_CASE ("")
     
 //    transformations <_types <A, B, C>, transformer <common_s <>>> _vv = types_t <A, B, C> | common;
     
-    auto vv = types_t <int, double, char> | common;
+    auto vv = types_t <int, double, char> | common + common;
     
     
 
@@ -125,16 +161,14 @@ TEST_CASE ("")
     
 //    auto d = as.operator ()<A1, A2>();
     HEM <A3, A4> h;
-    cout << HEM <A2, A4>::value << endl;
     
-    int vv2 = types_t <int, double, char> | common;
-    
-    
+    transformations <_types <int, double, char>, transformer <common_s <>>> vv2 = types_t <int, double, char> | common;
+    std::string ss = types_t <int, double, char> | same | ;
     
     
     
-    cout << (_e <'0'> and _e <'1'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << endl;
-    cout << (_e <'0'> or _e <'1'> | _e <'x'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << endl;
+    std::cout << (_e <'0'> and _e <'1'> and _e <'2'> and _e <'3'> and _e <'4'> | _e <'5'> + _e <'6'> or _e <'7'>) << std::endl;
+    std::cout << (_e <'0'> or _e <'1'> | _e <'x'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << std::endl;
 
 
 

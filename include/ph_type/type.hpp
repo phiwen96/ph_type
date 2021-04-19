@@ -2,7 +2,7 @@
 #define TYPE_HPP
 #include <ph_concepts/concepts.hpp>
 //#include <boost/hof.hpp>
-using namespace std;
+//using namespace std;
 
 template <typename T>
 concept bool_func = requires (T t) {
@@ -35,6 +35,70 @@ constexpr auto type_watcher (T&&... t) -> auto
         (..., me.template operator () <U...> (move (me), t));
     };
 }
+
+
+template <typename Transformer, typename... Args>
+concept can_transform = requires {
+    typename Transformer::template transform <_types, Args...>;
+};
+
+
+template <typename... T>
+struct __as
+{
+    
+};
+
+template <>
+struct __as <>
+{
+    
+};
+
+constexpr __as as {};
+
+struct __if {};
+constexpr __if _if {};
+
+struct __then {};
+constexpr __then _then {};
+
+struct __else {};
+constexpr __else _else {};
+
+struct __while {};
+constexpr __while _while {};
+
+struct __and {};
+constexpr __and _and {};
+
+struct __or {};
+constexpr __or _or {};
+
+template <typename Parent, typename Child>
+struct __parent
+{
+    using me = __parent <Parent, Child>;
+    
+    template <typename Transformer>
+    using add_transformer = __parent <Parent, typename Child::template add_transformer <Transformer>>;
+
+    template <typename... Types>
+    using transform = typename Child::template transform <typename Parent::template transform <Types...>>;
+};
+
+struct __same
+{
+    template <typename ChildTransformer>
+    using add_transformer = __parent <__same, ChildTransformer>;
+    
+//    template <template <typename...> typename T, typename... U>
+//    using transform = std::conditional_t <(std::is_same_v <A, U> and ...), std::string, std::false_type>;
+};
+
+
+
+constexpr auto same = __same {};
 
 struct value_type_s {};
 constexpr auto value_type = value_type_s {};
@@ -74,7 +138,7 @@ struct _types <T>
 //
 //};
 template <auto const&... t>
-constexpr _types <decay_t <decltype (t)>...> types;
+constexpr _types <std::decay_t <decltype (t)>...> types;
 
 template <typename... T>
 constexpr _types <T...> types_t;
@@ -118,17 +182,26 @@ concept is_type_transf = requires {
 template <typename Derived>
 struct transformer
 {
+//    template <typename Derived2>
+//    using add_transformer = transformer <typename Derived::template add_transformer <Derived2>>;
+    
     template <template <typename...> typename T, typename... U>
+    requires requires {
+        typename Derived::template transform <T, U...>;
+    }
     using transform = typename Derived::template transform <T, U...>;
 };
+
+
 
 template <typename... T>
 struct transformations;
 
-template <typename Derived, typename... T>
-struct transformations <_types <T...>, transformer <Derived>>
+template <typename Transformer, typename... T>
+requires (can_transform <Transformer, T...>)
+struct transformations <_types <T...>, Transformer>
 {
-    using type = typename transformer <Derived>::template transform <_types, T...>;
+    using type = typename Transformer::template transform <_types, T...>;
     
     operator auto () {
         return type {};
@@ -175,20 +248,29 @@ struct has_s
     
 };
 
+template <typename...>
+struct common_s;
 
-
-template <bool yes = true>
-struct common_s
+template <typename Derived>
+struct common_s <Derived>
 {
+//    template <template <typename...> typename T, typename... U>
+//    using transform = typename T <common_type_t <U...>>::type;
+    template <typename Derived2>
+    using add_transformer = common_s <typename Derived::template add_transformer <Derived2>>;
+    
     template <template <typename...> typename T, typename... U>
-    using transform = typename T <common_type_t <U...>>::type;
+    using transform = typename Derived::template transform <T, std::common_type_t <U...>>;
 };
 
 template <>
-struct common_s <false>
+struct common_s <>
 {
+    template <typename Derived>
+    using add_transformer = common_s <Derived>;
+    
     template <template <typename...> typename T, typename... U>
-    using transform = typename T <common_type_t <U...>>::type;
+    using transform = typename T <std::common_type_t <U...>>::type;
 };
 
 
@@ -234,7 +316,17 @@ constexpr transformer <common_s <>> common;
 
 
 
+template <typename Derived1, typename Derived2>
+constexpr auto operator + (transformer <Derived1> const& a, transformer <Derived2> const&)
+{
+    return transformer <typename Derived1::template add_transformer <Derived2>> {};
+}
 
+template <typename Types, typename Derived1, typename Derived2>
+constexpr auto operator and (transformations <Types, transformer <Derived1>> const& a, transformer <Derived2> const&)
+{
+    return transformations <Types, transformer <typename Derived1::template add_transformer <Derived2>>> {};
+}
 
 
 template <typename T, typename Derived1>
@@ -257,16 +349,35 @@ constexpr auto operator | (_types <T...> const&, transformer <Derived1> const& t
     return transformations <_types <T...>, transformer <Derived1>> {};
 }
 
+template <typename... T, typename Transformer>
+requires (can_transform <Transformer, T...>)
+constexpr auto operator | (_types <T...> const&, Transformer const& t) -> auto
+{
+    return transformations <_types <T...>, Transformer> {};
+}
+
+template <typename T, typename Derived1, typename Derived2>
+constexpr auto operator | (transformations <T, transformer <Derived1>> const&, Derived2 const& t) -> auto
+{
+    return transformations <T, transformer <typename Derived1::template add_transformer <Derived2>>> {};
+}
+
+template <typename T, typename Derived1, typename Derived2>
+constexpr auto operator and (transformations <T, transformer <Derived1>> const&, Derived2 const& t) -> auto
+{
+    return transformations <T, transformer <typename Derived1::template add_transformer <Derived2>>> {};
+}
+
 
 
 
 template <typename T, typename Derived1>
 constexpr auto operator | (T&&, transformer <Derived1> const&) -> auto
 {
-    return transformations <decay_t <T>, transformer <Derived1>> {};
+    return transformations <std::decay_t <T>, transformer <Derived1>> {};
 }
 
-static_assert (is_same_v <transformations <_types <int, char, double>, transformer <common_s <>>>, decltype (types_t <int, char, double> | common)>, "");
+static_assert (std::is_same_v <transformations <_types <int, char, double>, transformer <common_s <>>>, decltype (types_t <int, char, double> | common)>, "");
 
 template <typename T>
 constexpr auto operator or (T&& t, common_s <> const&) -> auto
@@ -284,7 +395,7 @@ constexpr auto operator or (T&& t, common_s <> const&) -> auto
 
 template <typename... T, typename... U>
 constexpr auto operator and (type_t <T...> const&, type_t <U...> const&)
-{cout<<"and"<<endl;
+{std::cout<<"and"<<std::endl;
     return type_t <T..., U...> {};
 }
 
@@ -320,33 +431,32 @@ constexpr auto operator and (type_t <T...> const&, type_t <U...> const&)
 
 
 
-template <typename T, typename U>
-concept __same = is_same_v <T, U>;
-
-template <typename T, typename U>
-concept has_overloaded_same_type = requires (T const& t)
-{
-    {t.template same_type <U> ()} -> __same <bool>;
-    
-    //    {U::template same_type <U> (declval <U const&> ())} -> __same <bool>;
-};
 
 
-
-
-
-template <typename T, typename U>
-constexpr auto operator== (type_t <T> const&, U const& u) -> bool
-requires (has_overloaded_same_type <U, T>)
-{
-    return u.template same_type <T> ();
-}
-
-template <typename T, typename U>
-constexpr auto operator== (type_t <T> const&, U const&) -> bool
-requires (not has_overloaded_same_type <U, T>)
-{
-    return is_same_v <T, U>;
-}
+//template <typename T, typename U>
+//concept has_overloaded_same_type = requires (T const& t)
+//{
+//    {t.template same_type <U> ()} -> __same <bool>;
+//
+//    //    {U::template same_type <U> (declval <U const&> ())} -> __same <bool>;
+//};
+//
+//
+//
+//
+//
+//template <typename T, typename U>
+//constexpr auto operator== (type_t <T> const&, U const& u) -> bool
+//requires (has_overloaded_same_type <U, T>)
+//{
+//    return u.template same_type <T> ();
+//}
+//
+//template <typename T, typename U>
+//constexpr auto operator== (type_t <T> const&, U const&) -> bool
+//requires (not has_overloaded_same_type <U, T>)
+//{
+//    return is_same_v <T, U>;
+//}
 
 #endif
