@@ -118,7 +118,7 @@ template <typename... T>
 struct transformations;
 
 template <typename Transformer, template <typename...> typename TypesContainer, typename... Types>
-requires (can_transform_types <Transformer, TypesContainer, Types...>)
+requires (can_transform <Transformer, TypesContainer, Types...>)
 struct transformations <TypesContainer <Types...>, Transformer>
 {
     using type = typename Transformer::template transform <TypesContainer, Types...>;
@@ -270,7 +270,7 @@ constexpr auto operator | (_types <T...> const&, transformer <Derived1> const& t
 }
 
 template <typename Transformer, template <typename...> typename TypesContainer, typename... Types>
-requires (can_transform_types <Transformer, TypesContainer, Types...>)
+requires (can_transform <Transformer, TypesContainer, Types...>)
 constexpr auto operator | (TypesContainer <Types...> const&, Transformer const& t) -> auto
 {
     return transformations <TypesContainer <Types...>, Transformer> {};

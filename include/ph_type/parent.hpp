@@ -12,7 +12,7 @@ struct __parent
     requires requires {
         can_add_transformer <Child, NewTransformer>;
     }
-    using add_transformer = __parent <Parent, typename Child::template add_transformer <Transformer>>;
+    using add_transformer = __parent <Parent, typename Child::template add_transformer <NewTransformer>>;
 
     template <typename... Types>
     using transform = typename Child::template transform <typename Parent::template transform <Types...>>;
