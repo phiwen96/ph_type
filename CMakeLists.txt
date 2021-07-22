@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.19.4)
+cmake_minimum_required (VERSION 3.18)
 get_filename_component (self ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 project (
@@ -9,7 +9,9 @@ project (
 )	
 
 
-add_subdirectory (cmake/phake)
+if(NOT TARGET phake)
+	add_subdirectory(cmake/phake)
+endif(NOT TARGET phake)
 # if (NOT TARGET ph_coroutines)
 # 	add_subdirectory (dependencies/ph_coroutines)
 # endif ()

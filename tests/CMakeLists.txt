@@ -1,6 +1,6 @@
 # Testing library
 set (${self} test_${PROJECT_NAME})
-ph_fetch (catch2)
+# ph_fetch (catch2)
 file(GLOB_RECURSE HEADER_LIST "include/*.hpp")
 file(GLOB SOURCE_LIST *.cpp)
 add_executable (test_${PROJECT_NAME} ${SOURCE_LIST} ${HEADER_LIST})
