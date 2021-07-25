@@ -30,9 +30,9 @@ auto mult = [] (auto a)
 
 struct E {};
 struct A : E {};
-struct B : E {
-//    using value_type = int;
-};
+//struct B : E {
+////    using value_type = int;
+//};
 struct C : E {};
 
 struct D {};
@@ -49,7 +49,7 @@ struct BASE
 
 
 
-template <char c>
+template <auto c>
 struct __e {
     friend std::ostream& operator << (std::ostream& os, __e const& aa)
     {
@@ -59,11 +59,18 @@ struct __e {
 };
 
 
-template <char c>
+template <auto c>
 constexpr auto _e = __e <c> {};
 
 
-template <char... c>
+
+constexpr auto printer (auto&& c) noexcept -> __e <c>
+{
+    return {};
+}
+
+
+template <auto... c>
 struct __operator
 {
     friend std::ostream& operator << (std::ostream& os, __operator const& aa)
@@ -73,25 +80,25 @@ struct __operator
     }
 };
 
-template <template <char...> typename A, template <char...> typename B, char... C, char... D>
-auto operator|(A <C...> a, B <D...> b)
+template <template <auto...> typename A, template <auto...> typename B, auto... C, auto... D>
+inline constexpr auto operator|(A <C...> a, B <D...> b) noexcept
 {
     return __operator <'(', C..., ' ', '|', ' ', D..., ')'> {};
 }
-template <template <char...> typename A, template <char...> typename B, char... C, char... D>
-auto operator and (A <C...> a, B <D...> b)
+template <template <auto...> typename A, template <auto...> typename B, auto... C, auto... D>
+inline constexpr auto operator and (A <C...> a, B <D...> b) noexcept
 {
     return __operator <'(', C..., ' ', 'a', 'n', 'd', ' ', D..., ')'> {};
 }
 
-template <template <char...> typename A, template <char...> typename B, char... C, char... D>
-auto operator or (A <C...> a, B <D...> b)
+template <template <auto...> typename A, template <auto...> typename B, auto... C, auto... D>
+inline constexpr auto operator or (A <C...> a, B <D...> b) noexcept
 {
     return __operator <'(', C..., ' ', 'o', 'r', ' ', D..., ')'> {};
 }
 
-template <template <char...> typename A, template <char...> typename B, char... C, char... D>
-auto operator + (A <C...> a, B <D...> b)
+template <template <auto...> typename A, template <auto...> typename B, auto... C, auto... D>
+inline constexpr auto operator + (A <C...> a, B <D...> b) noexcept
 {
     return __operator <'(', C..., ' ', '+', ' ', D..., ')'> {};
 }
@@ -167,15 +174,18 @@ TEST_CASE ("")
     transformations <_types <int, double, char>, transformer <common_s <>>> vv2 = types_t <int, double, char> | common;
 //    std::string ss = types_t <int, double, char> | same <as> ;
     
-    
+    using namespace std;
+//     auto p = printer(3);
+//    cout << printer ('g') << endl;
+    cout << (_e<4> or _e<'q'> and _e<'c'>) << endl;
     
     std::cout << (_e <'0'> and _e <'1'> and _e <'2'> and _e <'3'> and _e <'4'> | _e <'5'> + _e <'6'> or _e <'7'>) << std::endl;
     std::cout << (_e <'0'> or _e <'1'> | _e <'x'> and _e <'2'> or _e <'3'> and _e <'4'> | _e <'5'> | _e <'6'>) << std::endl;
 
 //    "ew"_y;
     230_y;
-    std::cout << L"x = " << std::endl;
-    std::cout << L"y = " << std::endl;
+//    std::cout << L"x = " << std::endl;
+//    std::cout << L"y = " << std::endl;
     3_;
     "ds"_;
     common;
