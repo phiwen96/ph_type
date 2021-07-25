@@ -9,9 +9,15 @@ project (
 )	
 
 
-if(NOT TARGET phake)
-	add_subdirectory(cmake/phake)
-endif(NOT TARGET phake)
+if (NOT TARGET ph_cmake)
+include(FetchContent)
+	FetchContent_Declare(
+  		ph_cmake
+  		GIT_REPOSITORY https://github.com/phiwen96/ph_cmake.git
+  		GIT_TAG        v0.0.0)
+
+	FetchContent_MakeAvailable(ph_cmake)
+endif ()
 # if (NOT TARGET ph_coroutines)
 # 	add_subdirectory (dependencies/ph_coroutines)
 # endif ()
